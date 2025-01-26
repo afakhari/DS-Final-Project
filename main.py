@@ -119,6 +119,20 @@ def compute_follow(cfg, start_symbol, first):
                         trailer = {symbol}
     return follow
 
+
+def create_parse_table(cfg, first, follow):
+    parse_table = {}
+    for nt, productions in cfg.items():
+        for production in productions:
+            first_set = compute_first({nt: [production]})[nt]
+            for terminal in first_set:
+                if terminal != "epsilon":
+                    parse_table[(nt, terminal)] = production
+            if "epsilon" in first_set:
+                for terminal in follow[nt]:
+                    parse_table[(nt, terminal)] = production
+    return parse_table
+
 tokens = lexical_analyzer(sample_code)
 
 print("Tokens:")
