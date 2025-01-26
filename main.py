@@ -169,11 +169,6 @@ def predictive_parser(tokens, parse_table, start_symbol):
 
     return True
 
-tokens = lexical_analyzer(sample_code)
-
-print("Tokens:")
-for token_type, value in tokens:
-    print(f"[{token_type}, {value}]")
 
 cfg = {
     "S": [["P", "U", "M"]],
@@ -184,3 +179,30 @@ cfg = {
 }
 
 first = compute_first(cfg)
+follow = compute_follow(cfg, "S", first)
+
+first["S"].update(first["P"])
+
+parse_table = create_parse_table(cfg, first, follow)
+
+tokens = lexical_analyzer(sample_code)
+
+print("\nParsing:")
+if predictive_parser(tokens, parse_table, "S"):
+    print("Input parsed successfully.")
+else:
+    print("Parsing failed.")
+
+token_table = create_token_table(tokens)
+
+
+
+print("\nTokens:")
+for token_type, value, line_no in tokens:
+    print(f"[{token_type}, {value}, line {line_no}]")
+
+
+
+print("\nToken Table:")
+for token_type, values in token_table.items():
+    print(f"{token_type}: {values}")
