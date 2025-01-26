@@ -133,6 +133,42 @@ def create_parse_table(cfg, first, follow):
                     parse_table[(nt, terminal)] = production
     return parse_table
 
+
+def predictive_parser(tokens, parse_table, start_symbol):
+    stack = ["$"]
+    stack.append(start_symbol)
+    tokens.append(("end", "$", -1))
+
+    index = 0
+    while stack:
+        top = stack.pop()
+        current_token = tokens[index][1]
+
+        if top == "$" and current_token == "$":
+            print("Parsing successful!")
+            return True
+
+        if top not in cfg and top != current_token:
+            print(f"Error: Unexpected token '{current_token}' at line {tokens[index][2]}.")
+            return False
+
+        if top in cfg:
+            if (top, current_token) in parse_table:
+                production = parse_table[(top, current_token)]
+                if production != ["epsilon"]:
+                    stack.extend(reversed(production))
+            else:
+                print(f"Error: No rule for ({top}, {current_token}) at line {tokens[index][2]}.")
+                return False
+        else:
+            index += 1
+
+    if stack:
+        print("Error: Stack is not empty after parsing.")
+        return False
+
+    return True
+
 tokens = lexical_analyzer(sample_code)
 
 print("Tokens:")
