@@ -95,6 +95,30 @@ def compute_first(cfg):
                         changed = True
     return first
 
+
+def compute_follow(cfg, start_symbol, first):
+    follow = {nt: set() for nt in cfg.keys()}
+    follow[start_symbol].add("$")
+    changed = True
+
+    while changed:
+        changed = False
+        for nt, productions in cfg.items():
+            for production in productions:
+                trailer = follow[nt].copy()
+                for symbol in reversed(production):
+                    if symbol in cfg:
+                        if not trailer.issubset(follow[symbol]):
+                            follow[symbol].update(trailer)
+                            changed = True
+                        if "epsilon" in first[symbol]:
+                            trailer.update(first[symbol] - {"epsilon"})
+                        else:
+                            trailer = first[symbol].copy()
+                    else:
+                        trailer = {symbol}
+    return follow
+
 tokens = lexical_analyzer(sample_code)
 
 print("Tokens:")
