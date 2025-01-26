@@ -68,34 +68,6 @@ def create_token_table(tokens):
     return token_table
 
 
-def compute_first(cfg):
-    first = {nt: set() for nt in cfg.keys()}
-    changed = True
-
-    while changed:
-        changed = False
-        for nt, productions in cfg.items():
-            for production in productions:
-                for symbol in production:
-                    if symbol in cfg:
-                        new_firsts = first[symbol] - {"epsilon"}
-                        if not new_firsts.issubset(first[nt]):
-                            first[nt].update(new_firsts)
-                            changed = True
-                        if "epsilon" not in first[symbol]:
-                            break
-                    else:
-                        if symbol not in first[nt]:
-                            first[nt].add(symbol)
-                            changed = True
-                        break
-                else:
-                    if "epsilon" not in first[nt]:
-                        first[nt].add("epsilon")
-                        changed = True
-    return first
-
-
 def compute_follow(cfg, start_symbol, first):
     follow = {nt: set() for nt in cfg.keys()}
     follow[start_symbol].add("$")
@@ -118,20 +90,6 @@ def compute_follow(cfg, start_symbol, first):
                     else:
                         trailer = {symbol}
     return follow
-
-
-def create_parse_table(cfg, first, follow):
-    parse_table = {}
-    for nt, productions in cfg.items():
-        for production in productions:
-            first_set = compute_first({nt: [production]})[nt]
-            for terminal in first_set:
-                if terminal != "epsilon":
-                    parse_table[(nt, terminal)] = production
-            if "epsilon" in first_set:
-                for terminal in follow[nt]:
-                    parse_table[(nt, terminal)] = production
-    return parse_table
 
 
 def predictive_parser(tokens, parse_table, start_symbol):
@@ -178,24 +136,12 @@ cfg = {
     "T": [["int", "identifier", ";", "T"], ["identifier", "=", "number", ";", "T"], ["epsilon"]]
 }
 
-first = compute_first(cfg)
+
 follow = compute_follow(cfg, "S", first)
-
-first["S"].update(first["P"])
-
-parse_table = create_parse_table(cfg, first, follow)
 
 tokens = lexical_analyzer(sample_code)
 
-print("\nParsing:")
-if predictive_parser(tokens, parse_table, "S"):
-    print("Input parsed successfully.")
-else:
-    print("Parsing failed.")
-
 token_table = create_token_table(tokens)
-
-
 
 print("\nTokens:")
 for token_type, value, line_no in tokens:
